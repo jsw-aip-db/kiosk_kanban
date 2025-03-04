@@ -26,7 +26,7 @@ After=getty@%i.service
 
 [Service]
 Type=simple
-ExecStart=cage -s -- pyhon ~/autologin/login.py
+ExecStart=cage -s -- /home/$USER/autologin/.venv/bin/python /home/$USER/autologin/login.py
 Environment="XKB_DEFAULT_LAYOUT=$KEYBOARD"
 Restart=always
 User=$USER

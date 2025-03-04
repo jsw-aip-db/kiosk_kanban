@@ -3,6 +3,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.firefox.service import Service
 
 import configparser
 import base64
@@ -13,14 +14,16 @@ config = configparser.ConfigParser(interpolation=None)
 config.read('login.properties')
 
 options = Options()
-#options.add_argument("--kiosk") 
-# options.set_preference("browser.fullscreen.autohide", True)
+options.add_argument("--kiosk") 
+options.set_preference("browser.fullscreen.autohide", True)
+
+service = Service(executable_path='/usr/local/bin/geckodriver')
 
 EMAILFIELD = (By.ID, "i0116")
 PASSWORDFIELD = (By.ID, "i0118")
 NEXTBUTTON = (By.ID, "idSIButton9")
 
-browser = webdriver.Firefox(options=options)
+browser = webdriver.Firefox(options=options, service=service)
 browser.get(config['autologin']['url'])
 
 # wait for email field and enter email
