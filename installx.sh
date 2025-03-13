@@ -17,7 +17,7 @@ PartOf=graphical-session.target
 
 [Service]
 Type=simple
-ExecStart=/home/kiosk/autologin/.venv/bin/python /home/kiosk/autologin/login.py
+ExecStart=/home/$USER/autologin/.venv/bin/python /home/$USER/autologin/login.py
 Restart=always
 ExitType=cgroup
 
@@ -166,7 +166,7 @@ cp login.properties /home/$USER/autologin/login.properties
 echo "$AUTOLOGIN" > /home/$USER/autologin/login.py
 echo "$REQUIREMENTS" > /home/$USER/autologin/requirements.txt
 
-python -m venv /home/$USER/autologin/.venv
+python3 -m venv /home/$USER/autologin/.venv
 /home/$USER/autologin/.venv/bin/python -m pip install -r /home/$USER/autologin/requirements.txt
 
 # setup systemd
