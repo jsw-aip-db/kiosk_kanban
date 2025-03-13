@@ -49,15 +49,19 @@ EOF
 
 yes | apt update
 yes | apt upgrade
-yes | apt install firefox-esr cage xwayland
+yes | apt install firefox-esr cage xwayland python3-pip vim
 
 cp login.properties /home/$USER/autologin/login.properties
 cp login.py /home/$USER/autologin/login.py
-cp requirements.txt /home/$USER/autologin/requirements.py
+cp requirements.txt /home/$USER/autologin/requirements.txt
+
+wget https://github.com/mozilla/geckodriver/releases/download/v0.36.0/geckodriver-v0.36.0-linux-aarch64.tar.gz
+tar -xvf geckodriver-v0.36.0-linux-aarch64.tar.gz
+mv geckodriver /usr/local/bin
+rm geckodriver-v0.36.0-linux-aarch64.tar.gz
 
 python -m venv /home/$USER/autologin/.venv
-source /home/$USER/autologin/.venv/bin/activate
-python -m pip install -r /home/$USER/autologin/requirements.txt
+/home/$USER/autologin/.venv/bin/python -m pip install -r /home/$USER/autologin/requirements.txt
 
 
 echo "$SERV" > /etc/systemd/system/cage@.service

@@ -5,13 +5,20 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.service import Service
 
+import os
 import configparser
 import base64
 
 config = configparser.ConfigParser(interpolation=None)
 
+# Get the directory of the current script
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Define the path to the config file
+config_file_path = os.path.join(script_dir, 'login.properties')
+
 # Read the properties file
-config.read('login.properties')
+config.read(config_file_path)
 
 options = Options()
 options.add_argument("--kiosk") 

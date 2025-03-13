@@ -1,0 +1,12 @@
+[Unit]
+Description=Kanban Kiosk
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/home/kiosk/autologin/.venv/bin/python /home/kiosk/autologin/login.py
+Restart=always
+ExitType=cgroup
+
+[Install]
+WantedBy=default.target
