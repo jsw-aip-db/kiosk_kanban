@@ -1,13 +1,33 @@
 #!/bin/bash
 
-#This script installs the kanban kiosk on a rasperry pi. 
+# This script installs the kanban kiosk on a rasperry pi. 
 #
-#Usage: 
+# Usage: 
 # 1. create login.properties with url and credentials
 # 2. chmod +x installx.sh 
 # 3. run ./installx.sh
 
+set -e  # Exit on error
+
+# Check if script is run as root
+if [ "$EUID" -eq 0 ]; then 
+    echo "Please do not run as root. Use a regular user account."
+    exit 1
+fi
+
+# Check if login.properties exists
+if [ ! -f "login.properties" ]; then
+    echo "Error: login.properties not found. Please create it first."
+    exit 1
+fi
+
 USER="kiosk"
+
+# Check if user exists
+if ! id "$USER" &>/dev/null; then
+    echo "Error: User $USER does not exist. Please create the user first."
+    exit 1
+fi
 
 # define service
 SERVICE=$(cat << EOF
@@ -24,7 +44,6 @@ ExitType=cgroup
 [Install]
 WantedBy=default.target
 EOF
-
 )
 
 # autologin script
@@ -79,7 +98,6 @@ WebDriverWait(browser, 10).until(EC.element_to_be_clickable(PASSWORDFIELD)).send
 WebDriverWait(browser, 10).until(EC.element_to_be_clickable(NEXTBUTTON)).click()
 WebDriverWait(browser, 10).until(EC.element_to_be_clickable(NEXTBUTTON)).click()
 EOF
-
 )
 
 # python requirements
@@ -149,29 +167,57 @@ websocket-client==1.8.0
 wsproto==1.2.0
 yarg==0.1.9
 EOF
-
 )
 
 # install geckodriver
 if [ ! -f /usr/local/bin/geckodriver ]; then
-    wget https://github.com/mozilla/geckodriver/releases/download/v0.36.0/geckodriver-v0.36.0-linux-aarch64.tar.gz
-    tar -xvf geckodriver-v0.36.0-linux-aarch64.tar.gz
-    sudo mv geckodriver /usr/local/bin
+    echo "Installing geckodriver..."
+    if ! wget https://github.com/mozilla/geckodriver/releases/download/v0.36.0/geckodriver-v0.36.0-linux-aarch64.tar.gz; then
+        echo "Error: Failed to download geckodriver"
+        exit 1
+    fi
+    tar -xvf geckodriver-v0.36.0-linux-aarch64.tar.gz || { echo "Error: Failed to extract geckodriver"; exit 1; }
+    sudo mv geckodriver /usr/local/bin || { echo "Error: Failed to move geckodriver to /usr/local/bin"; exit 1; }
     rm geckodriver-v0.36.0-linux-aarch64.tar.gz
+    echo "Geckodriver installed successfully"
 fi
 
 # setup autologin script
-mkdir -p /home/$USER/autologin
-cp login.properties /home/$USER/autologin/login.properties
-echo "$AUTOLOGIN" > /home/$USER/autologin/login.py
-echo "$REQUIREMENTS" > /home/$USER/autologin/requirements.txt
+echo "Setting up autologin script..."
+mkdir -p /home/$USER/autologin || { echo "Error: Failed to create autologin directory"; exit 1; }
+cp login.properties /home/$USER/autologin/login.properties || { echo "Error: Failed to copy login.properties"; exit 1; }
+echo "$AUTOLOGIN" > /home/$USER/autologin/login.py || { echo "Error: Failed to create login.py"; exit 1; }
+echo "$REQUIREMENTS" > /home/$USER/autologin/requirements.txt || { echo "Error: Failed to create requirements.txt"; exit 1; }
 
-python3 -m venv /home/$USER/autologin/.venv
-/home/$USER/autologin/.venv/bin/python -m pip install -r /home/$USER/autologin/requirements.txt
+# Create and activate virtual environment
+echo "Setting up Python virtual environment..."
+if ! python -m venv /home/$USER/autologin/.venv; then
+    echo "Error: Failed to create virtual environment"
+    exit 1
+fi
+
+if ! /home/$USER/autologin/.venv/bin/python -m pip install -r /home/$USER/autologin/requirements.txt; then
+    echo "Error: Failed to install Python requirements"
+    exit 1
+fi
 
 # setup systemd
-mkdir -p /home/$USER/.config/systemd/user
-echo "$SERVICE" > /home/$USER/.config/systemd/user/kiosk.service
+echo "Setting up systemd service..."
+mkdir -p /home/$USER/.config/systemd/user || { echo "Error: Failed to create systemd user directory"; exit 1; }
+echo "$SERVICE" > /home/$USER/.config/systemd/user/kiosk.service || { echo "Error: Failed to create service file"; exit 1; }
 
-systemctl --user enable kiosk
-systemctl --user start kiosk
+# Fix permissions
+chown -R $USER:$USER /home/$USER/autologin || { echo "Error: Failed to set permissions"; exit 1; }
+
+# Enable and start service
+if ! systemctl --user enable kiosk; then
+    echo "Error: Failed to enable kiosk service"
+    exit 1
+fi
+
+if ! systemctl --user start kiosk; then
+    echo "Error: Failed to start kiosk service"
+    exit 1
+fi
+
+echo "Installation completed successfully!"
