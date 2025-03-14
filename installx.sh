@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This script installs the kanban kiosk on a rasperry pi. 
+# This script installs the kanban kiosk autologin script on a Raspberry Pi. 
 #
 # Usage: 
 # 1. create login.properties with url and credentials
