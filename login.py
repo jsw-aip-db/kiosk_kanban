@@ -9,6 +9,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.service import Service
 import platform
+import time
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -77,13 +78,10 @@ def login_to_kanban(browser, config):
         WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.ID, "idSIButton9"))).click()
 
         logging.info("Login successful.")
-        input("Press Enter to continue...")
-        close_browser = input("Do you want to close the browser? (yes/no): ").strip().lower()
-        if close_browser in ('yes', 'y'):
-            browser.quit()
-            logging.info("Browser closed.")
-        else:
-            logging.info("Browser remains open.")
+        while True:
+            browser.refresh()
+            logging.info("Page refreshed.")
+            time.sleep(60)
     except Exception as e:
         logging.error("An error occurred during login: %s", e)
     finally:
